@@ -1,0 +1,31 @@
+name: Deploy via SSM
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Test SSM access (create & read file)
+        run: |
+          aws ssm send-command \
+            --instance-ids "i-04c9cd793bbd27c6b" \
+            --document-name "AWS-RunShellScript" \
+            --comment "SSM connectivity test" \
+            --parameters commands='[
+              "mkdir -p /tmp/ssm-test",
+              "echo \"SSM is working 🚀\" > /tmp/ssm-test/test.txt",
+              "cat /tmp/ssm-test/test.txt"
+            ]'
